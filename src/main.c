@@ -6,7 +6,7 @@
 /*   By: vchakhno <vchakhno@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/09 17:05:02 by vchakhno          #+#    #+#             */
-/*   Updated: 2023/06/10 02:57:03 by vchakhno         ###   ########.fr       */
+/*   Updated: 2023/06/10 15:51:05 by vchakhno         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,10 +90,14 @@ bool	run_heredoc(pid_t *heredoc_pid, int *read_fd)
 	return (true);
 }
 
-void	kill_heredoc(pid_t heredoc_pid)
+// Probablement pas besoin de le wait
+// Le heredoc est garanti d'être fini :
+// - soit par exit après avoir tout lu
+// - soit par SIGPIPE si la commande se termine
+
+void	wait_heredoc(pid_t heredoc_pid)
 {
-	if (waitpid(heredoc_pid, NULL, WNOHANG) == 0)
-		kill(heredoc_pid, SIGQUIT);
+	waitpid(heredoc_pid, NULL, 0);
 }
 
 int	main(int argc, char **argv, char **env)
@@ -118,6 +122,6 @@ int	main(int argc, char **argv, char **env)
 	close(read_fd);
 	if (status == 0 && !wait_command(command_pid, &status))
 		status = 1;
-	kill_heredoc(heredoc_pid);
+	wait_heredoc(heredoc_pid);
 	return (status);
 }
